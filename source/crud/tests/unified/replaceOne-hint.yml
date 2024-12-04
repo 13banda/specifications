@@ -1,6 +1,3 @@
-# This file was created automatically using mongodb-spec-converter.
-# Please review the generated file, then remove this notice.
-
 description: replaceOne-hint
 schemaVersion: '1.0'
 runOnRequirements:
@@ -64,10 +61,8 @@ tests:
                     q: *filter
                     u: *replacement
                     hint: _id_
-                    multi:
-                      $$unsetOrMatches: false
-                    upsert:
-                      $$unsetOrMatches: false
+                    multi: { $$unsetOrMatches: false }
+                    upsert: { $$unsetOrMatches: false }
     outcome: &outcome
       -
         collectionName: *collection_name
@@ -105,8 +100,6 @@ tests:
                     u: *replacement
                     hint:
                       _id: 1
-                    multi:
-                      $$unsetOrMatches: false
-                    upsert:
-                      $$unsetOrMatches: false
+                    multi: { $$unsetOrMatches: false }
+                    upsert: { $$unsetOrMatches: false }
     outcome: *outcome

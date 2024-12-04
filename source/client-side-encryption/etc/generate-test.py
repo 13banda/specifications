@@ -3,6 +3,7 @@ import os
 import sys
 import yaml
 from jinja2 import Template
+from pathlib import Path
 description = """Generates YAML/JSON tests from a template file.
 
 This keeps key documents, JSONSchemas, and ciphertexts out of the
@@ -59,6 +60,25 @@ keys = {
         "updateDate": {"$date": {"$numberLong": "1552949630483"}},
         "status": {"$numberInt": "0"},
         "masterKey": {"provider": "local"}
+    },
+    "local:name2": {
+        "_id": {
+            "$binary": {
+                "base64": "local+name2+AAAAAAAAAA==",
+                "subType": "04"
+            }
+        },
+
+        "keyMaterial": {
+            "$binary": {
+                "base64": r"DX3iUuOlBsx6wBX9UZ3v/qXk1HNeBace2J+h/JwsDdF/vmSXLZ1l1VmZYIcpVFy6ODhdbzLjd4pNgg9wcm4etYig62KNkmtZ0/s1tAL5VsuW/s7/3PYnYGznZTFhLjIVcOH/RNoRj2eQb/sRTyivL85wePEpAU/JzuBj6qO9Y5txQgs1k0J3aNy10R9aQ8kC1NuSSpLAIXwE6DlNDDJXhw==",
+                "subType": "00"
+            }
+        },
+        "creationDate": {"$date": {"$numberLong": "1552949630483"}},
+        "updateDate": {"$date": {"$numberLong": "1552949630483"}},
+        "status": {"$numberInt": "0"},
+        "masterKey": {"provider": "local:name2"}
     },
     "azure": {
         "_id": {
@@ -159,6 +179,35 @@ keys = {
             "keyId": "1"
         },
         "keyAltNames": ["altname", "kmip_altname"]
+    },
+    "kmip_delegated": {
+        "_id": {
+            "$uuid": "7411e9af-c688-4df7-8143-5e60ae96cba6"
+        },
+        "keyMaterial": {
+            "$binary": {
+                "base64": "5TLMFWlguBWe5GUESTvOVtkdBsCrynhnV72XRyZ66/nk+EP9/1oEp1t1sg0+vwCTqULHjBiUE6DRx2mYD/Eup1+u2Jgz9/+1sV1drXeOPALNPkSgiZiDbIb67zRi+wTABEcKcegJH+FhmSGxwUoQAiHCsCbcvia5P8tN1lt98YQ=", "subType": "00"
+            }
+        },
+        "creationDate": {
+            "$date": {
+                "$numberLong": "1634220190041"
+            }
+        },
+        "updateDate": {
+            "$date": {
+                "$numberLong": "1634220190041"
+            }
+        },
+        "status": {
+            "$numberInt": "0"
+        },
+        "masterKey": {
+            "provider": "kmip",
+            "delegated": True,
+            "keyId": "11"
+        },
+        "keyAltNames": ["delegated"]
     }
 }
 
@@ -234,6 +283,11 @@ schemas = {
                     "algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic"
                 }
             },
+            "encrypted_string_kmip_delegated": {
+                "encrypt": {
+                    "keyId": [keys["kmip_delegated"]["_id"]], 
+                    "bsonType": "string",
+                    "algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic"}},
         },
         "bsonType": "object"
     },
@@ -329,6 +383,18 @@ schemas = {
         },
         "bsonType": "object",
         "required": ["test"]
+    },
+    "local:name2": {
+        "properties": {
+            "encrypted_string": {
+                "encrypt": {
+                    "keyId": [keys["local:name2"]["_id"]],
+                    "bsonType": "string",
+                    "algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic"
+                }
+            }
+        },
+        "bsonType": "object"
     },
 }
 
@@ -531,6 +597,28 @@ ciphertexts = [
             }
         }
     },
+    {
+        "schema": "all",
+        "field": "encrypted_string_kmip_delegated",
+        "plaintext": "string0",
+        "data": {
+            "$binary": {
+                "base64": "AXQR6a/GiE33gUNeYK6Wy6YCkB+8NVfAAjIbvLqyXIg6g1a8tXrym92DPoqmxpcdQyH0vQM3aFNMz7tZwQBimKs29ztZV/LWjM633HhO5ACl9A==",
+                "subType": "06"
+            }
+        }
+    },
+    {
+        "schema": "local:name2",
+        "field": "encrypted_string",
+        "plaintext": "string0",
+        "data": {
+            "$binary": {
+                "base64": "AZaHGpfp2pntvgAAAAAAAAAC07sFvTQ0I4O2U49hpr4HezaK44Ivluzv5ntQBTYHDlAJMLyRMyB6Dl+UGHBgqhHe/Xw+pcT9XdiUoOJYAx9g+w==",
+                "subType": "06"
+            }
+        }
+    },
 ]
 
 
@@ -563,10 +651,24 @@ def ciphertext(plaintext, field, schema="basic"):
     raise Exception("Ciphertext needs to be pre-generated")
 
 
-def local_provider():
+def local_provider(name=None):
+    if name is not None:
+        if name == "name2":
+            return {
+                "key": {"$binary": {"base64": "local+name2+YUJCa1kxNkVyNUR1QURhZ2h2UzR2d2RrZzh0cFBwM3R6NmdWMDFBMUN3YkQ5aXRRMkhGRGdQV09wOGVNYUMxT2k3NjZKelhaQmRCZGJkTXVyZG9uSjFk", "subType": "00"}}
+            }        
+        else:
+            raise Exception ("Unexpected name '{}'".format(name))
+    
     return {
         "key": {"$binary": {"base64": "Mng0NCt4ZHVUYUJCa1kxNkVyNUR1QURhZ2h2UzR2d2RrZzh0cFBwM3R6NmdWMDFBMUN3YkQ5aXRRMkhGRGdQV09wOGVNYUMxT2k3NjZKelhaQmRCZGJkTXVyZG9uSjFk", "subType": "00"}}
     }
+
+def yamlfile (relative_filepath):
+    filepath = Path("./source/client-side-encryption/etc/data") / Path(relative_filepath)
+    with open(filepath, "r") as file:
+        contents = file.read()
+        return yaml.safe_load (contents)
 
 if sys.version_info < (3, 0):
     print("Use Python 3")
@@ -597,7 +699,8 @@ for filepath in sys.argv[1:-1]:
         "ciphertext": ciphertext,
         "key": key,
         "local_provider": local_provider,
-        "schema_w_type": schema_w_type
+        "schema_w_type": schema_w_type,
+        "yamlfile": yamlfile,
     }
 
     rendered = template.render(**injections)

@@ -1,0 +1,22 @@
+site_name: MongoDB Specifications
+docs_dir: source
+nav:
+  - 'index.md'
+markdown_extensions:
+  - admonition
+  - footnotes
+  - pymdownx.superfences
+  - pymdownx.arithmatex
+  - pymdownx.escapeall
+  - toc:
+      permalink: 
+plugins:
+  - gh-admonitions
+validation:
+  absolute_links: warn 
+  unrecognized_links: warn
+  anchors: warn
+extra_javascript:
+  - 'https://cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS_CHTML'
+extra_css:
+  - extra.css
